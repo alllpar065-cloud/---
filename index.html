@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Захист інформації та нормативні документи</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 24px;
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: #eef4fb;
+    color: #17324d;
+  }
+  main {
+    max-width: 900px;
+    margin: auto;
+    padding: 30px;
+    background: white;
+    border-radius: 22px;
+    box-shadow: 0 12px 40px #17324d15;
+  }
+  h1 { font-size: 28px; margin-top: 0; }
+  .intro { color: #52677e; }
+  section {
+    margin: 20px 0;
+    padding: 20px;
+    border: 1px solid #dce5ef;
+    border-radius: 14px;
+  }
+  h2 { font-size: 18px; margin-top: 0; }
+  label.option {
+    display: block;
+    padding: 10px;
+    margin: 6px 0;
+    background: #f5f8fc;
+    border-radius: 9px;
+    cursor: pointer;
+  }
+  input { accent-color: #2269d4; }
+  .pair {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    align-items: center;
+    gap: 12px;
+    margin: 12px 0;
+  }
+  select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #bdcde0;
+    border-radius: 8px;
+    font: inherit;
+    background: white;
+  }
+  button {
+    padding: 12px 20px;
+    border: 0;
+    border-radius: 10px;
+    background: #2269d4;
+    color: white;
+    font: inherit;
+    cursor: pointer;
+    margin: 5px 6px 5px 0;
+  }
+  button.secondary { background: #52677e; }
+  .correct { border: 2px solid #24935b; background: #f0fff6; }
+  .wrong { border: 2px solid #d74b4b; background: #fff5f5; }
+  .explanation { margin-bottom: 0; line-height: 1.5; }
+  #result { font-size: 21px; font-weight: 600; }
+  #message { color: #b33434; }
+  progress { width: 100%; height: 16px; }
+  [hidden] { display: none !important; }
+  @media (max-width: 600px) {
+    body { padding: 12px; }
+    main { padding: 18px; }
+    .pair { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>🛡️ Захист інформації та нормативні документи</h1>
+  <p class="intro">
+    12 запитань з однією правильною відповіддю та
+    3 завдання на відповідність. Максимум — 15 балів.
+    Відповіді й пояснення з’являться після завершення тесту.
+  </p>
+
+  <p id="status" aria-live="polite"></p>
+  <progress id="progress" value="0" max="15"></progress>
+
+  <form id="quiz"></form>
+
+  <p id="message" role="alert"></p>
+  <p id="result" aria-live="polite"></p>
+
+  <button id="check" type="button">Перевірити тест</button>
+  <button id="restart" class="secondary" type="button">
+    Почати заново
+  </button>
+</main>
+
+<script>
+const questions = [
+  {
+    text: "Яка властивість означає, що інформація доступна лише уповноваженим особам?",
+    options: [
+      "Доступність",
+      "Конфіденційність",
+      "Швидкість",
+      "Відкритість"
+    ],
+    answer: 1,
+    note: "Конфіденційність — це захист інформації від несанкціонованого доступу."
+  },
+  {
+    text: "Який закон України присвячений захисту персональних даних?",
+    options: [
+      "«Про рекламу»",
+      "«Про захист персональних даних»",
+      "«Про дорожній рух»",
+      "«Про туризм»"
+    ],
+    answer: 1,
+    note: "Закон «Про захист персональних даних» регулює відносини, пов’язані із захистом та обробкою персональних даних."
+  },
+  {
+    text: "Яка інформація може бути персональними даними?",
+    options: [
+      "Прогноз погоди",
+      "Ім’я та номер телефону конкретної людини",
+      "Таблиця множення",
+      "Назва океану"
+    ],
+    answer: 1,
+    note: "Персональні дані стосуються людини, яку ідентифіковано або можна ідентифікувати."
+  },
+  {
+    text: "Яка дія допомагає захистити обліковий запис?",
+    options: [
+      "Використання пароля 123456",
+      "Передавання пароля друзям",
+      "Увімкнення двофакторної автентифікації",
+      "Публікація кодів підтвердження"
+    ],
+    answer: 2,
+    note: "Двофакторна автентифікація додає ще один чинник підтвердження входу."
+  },
+  {
+    text: "Яка назва закону України стосується кібербезпеки?",
+    options: [
+      "«Про основні засади забезпечення кібербезпеки України»",
+      "«Про музеї та музейну справу»",
+      "«Про транспорт»",
+      "«Про фізичну культуру і спорт»"
+    ],
+    answer: 0,
+    note: "Кібербезпеці присвячений Закон України «Про основні засади забезпечення кібербезпеки України»."
+  },
+  {
+    text: "Що таке фішинг?",
+    options: [
+      "Створення резервних копій",
+      "Виманювання даних через підроблені повідомлення або сайти",
+      "Оновлення операційної системи",
+      "Стиснення файлів"
+    ],
+    answer: 1,
+    note: "Шахраї можуть видавати себе за відомий сервіс, щоб отримати пароль, код або платіжні дані."
+  },
+  {
+    text: "Який пароль найстійкіший серед наведених?",
+    options: [
+      "12345678",
+      "Viter!Kava7Most#29",
+      "password",
+      "11111111"
+    ],
+    answer: 1,
+    note: "Важливі довжина й унікальність пароля. Наведений у тесті приклад не варто використовувати як власний пароль."
+  },
+  {
+    text: "Що потрібно зробити, отримавши підозріле посилання?",
+    options: [
+      "Негайно ввести свій пароль",
+      "Перевірити відправника та адресу сайту іншим надійним способом",
+      "Переслати всім знайомим",
+      "Завантажити всі вкладення"
+    ],
+    answer: 1,
+    note: "Не поспішайте відкривати посилання. Перевірте повідомлення через офіційний сайт або відомий контакт."
+  },
+  {
+    text: "Що допомагає відновити файли після їх втрати?",
+    options: [
+      "Резервне копіювання",
+      "Зменшення яскравості екрана",
+      "Зміна шпалер",
+      "Вимкнення звуку"
+    ],
+    answer: 0,
+    note: "Резервні копії потрібно зберігати окремо від оригіналів і перевіряти можливість відновлення."
+  },
+  {
+    text: "Яка дія є коректною під час використання чужого зображення?",
+    options: [
+      "Видати його за власне",
+      "Вважати будь-яке зображення в інтернеті вільним",
+      "Перевірити дозвіл або ліцензію та виконати умови використання",
+      "Завжди прибирати ім’я автора"
+    ],
+    answer: 2,
+    note: "Самого зазначення автора не завжди достатньо: потрібно мати правову підставу для використання твору."
+  },
+  {
+    text: "Який закон України стосується авторського права?",
+    options: [
+      "«Про авторське право і суміжні права»",
+      "«Про автомобільний транспорт»",
+      "«Про охорону атмосферного повітря»",
+      "«Про поштовий зв’язок»"
+    ],
+    answer: 0,
+    note: "Авторське право охороняє твори, зокрема тексти, зображення, музику та комп’ютерні програми."
+  },
+  {
+    text: "Яка поведінка відповідає цифровій етиці?",
+    options: [
+      "Публікувати чужі приватні повідомлення без дозволу",
+      "Ображати співрозмовників",
+      "Поважати приватність та спілкуватися коректно",
+      "Поширювати неперевірені чутки"
+    ],
+    answer: 2,
+    note: "Цифрова етика передбачає повагу до людей, їхньої приватності та прав."
+  }
+];
+
+const matches = [
+  {
+    text: "Установіть відповідність між властивістю інформації та її значенням.",
+    terms: ["Конфіденційність", "Цілісність", "Доступність"],
+    options: [
+      "Можливість отримати інформацію уповноваженим користувачам",
+      "Захист від несанкціонованого розкриття",
+      "Захист від несанкціонованих змін"
+    ],
+    answer: [1, 2, 0],
+    note: "Конфіденційність — захист від розкриття; цілісність — від небажаних змін; доступність — можливість доступу."
+  },
+  {
+    text: "Установіть відповідність між загрозою та прикладом.",
+    terms: ["Фішинг", "Шкідлива програма", "Втрата даних"],
+    options: [
+      "Програма непомітно пошкоджує файли",
+      "Важливі файли видалено без резервної копії",
+      "Підроблений сайт виманює пароль"
+    ],
+    answer: [2, 0, 1],
+    note: "Фішинг виманює дані; шкідлива програма може пошкоджувати файли; резервні копії допомагають при втраті даних."
+  },
+  {
+    text: "Установіть відповідність між засобом захисту та його призначенням.",
+    terms: ["Шифрування", "Резервне копіювання", "Оновлення"],
+    options: [
+      "Створення копій для відновлення",
+      "Перетворення даних для приховування змісту без ключа",
+      "Усунення відомих вразливостей програм"
+    ],
+    answer: [1, 0, 2],
+    note: "Шифрування захищає зміст даних; резервні копії забезпечують відновлення; оновлення можуть виправляти вразливості."
+  }
+];
+
+const form = document.getElementById("quiz");
+const total = questions.length + matches.length;
+let submitted = false;
+
+function buildQuiz() {
+  form.replaceChildren();
+
+  questions.forEach((q, i) => {
+    const section = document.createElement("section");
+    section.id = `question-${i}`;
+
+    const heading = document.createElement("h2");
+    heading.textContent = `${i + 1}. ${q.text}`;
+    section.append(heading);
+
+    q.options.forEach((option, j) => {
+      const label = document.createElement("label");
+      label.className = "option";
+
+      const input = document.createElement("input");
+      input.type = "radio";
+      input.name = `q${i}`;
+      input.value = j;
+
+      label.append(input, document.createTextNode(` ${option}`));
+      section.append(label);
+    });
+
+    form.append(section);
+  });
+
+  matches.forEach((q, i) => {
+    const section = document.createElement("section");
+    section.id = `match-${i}`;
+
+    const heading = document.createElement("h2");
+    heading.textContent = `${questions.length + i + 1}. ${q.text}`;
+    section.append(heading);
+
+    q.terms.forEach((term, j) => {
+      const row = document.createElement("div");
+      row.className = "pair";
+
+      const label = document.createElement("label");
+      label.textContent = term;
+      label.htmlFor = `m${i}-${j}`;
+
+      const select = document.createElement("select");
+      select.id = `m${i}-${j}`;
+      select.name = `m${i}-${j}`;
+      select.add(new Option("Оберіть відповідь", ""));
+
+      q.options.forEach((option, k) => {
+        select.add(new Option(option, String(k)));
+      });
+
+      row.append(label, select);
+      section.append(row);
+    });
+
+    form.append(section);
+  });
+
+  updateProgress();
+}
+
+function getAnswers() {
+  return [
+    ...questions.map((_, i) => {
+      const checked = form.querySelector(`input[name="q${i}"]:checked`);
+      return checked ? Number(checked.value) : null;
+    }),
+    ...matches.map((_, i) =>
+      [0, 1, 2].map(j => {
+        const value = form.elements.namedItem(`m${i}-${j}`).value;
+        return value === "" ? null : Number(value);
+      })
+    )
+  ];
+}
+
+function isComplete(answer) {
+  return Array.isArray(answer)
+    ? answer.every(value => value !== null)
+    : answer !== null;
+}
+
+function updateProgress() {
+  const count = getAnswers().filter(isComplete).length;
+  document.getElementById("progress").value = count;
+  document.getElementById("status").textContent =
+    `Виконано завдань: ${count} із ${total}`;
+}
+
+function showFeedback(section, correct, answer, note) {
+  section.classList.add(correct ? "correct" : "wrong");
+
+  const feedback = document.createElement("p");
+  feedback.className = "explanation";
+  feedback.textContent =
+    `${correct ? "✅ Правильно." : "❌ Неправильно."} ` +
+    `Правильна відповідь: ${answer}. ${note}`;
+
+  section.append(feedback);
+}
+
+form.addEventListener("change", () => {
+  if (!submitted) {
+    document.getElementById("message").textContent = "";
+    updateProgress();
+  }
+});
+
+form.addEventListener("submit", event => event.preventDefault());
+
+document.getElementById("check").addEventListener("click", () => {
+  if (submitted) return;
+
+  const answers = getAnswers();
+  const missing = answers
+    .map((answer, i) => isComplete(answer) ? null : i + 1)
+    .filter(value => value !== null);
+
+  if (missing.length) {
+    document.getElementById("message").textContent =
+      `Дайте відповіді на завдання: ${missing.join(", ")}.`;
+    return;
+  }
+
+  const repeated = matches
+    .map((_, i) =>
+      new Set(answers[questions.length + i]).size === 3
+        ? null
+        : questions.length + i + 1
+    )
+    .filter(value => value !== null);
+
+  if (repeated.length) {
+    document.getElementById("message").textContent =
+      `У завданнях ${repeated.join(", ")} використайте кожен варіант лише один раз.`;
+    return;
+  }
+
+  submitted = true;
+  let score = 0;
+
+  questions.forEach((q, i) => {
+    const correct = answers[i] === q.answer;
+    if (correct) score++;
+
+    showFeedback(
+      document.getElementById(`question-${i}`),
+      correct,
+      q.options[q.answer],
+      q.note
+    );
+  });
+
+  matches.forEach((q, i) => {
+    const values = answers[questions.length + i];
+    const correct = q.answer.every((value, j) => value === values[j]);
+    if (correct) score++;
+
+    const answer = q.terms
+      .map((term, j) => `${term} → ${q.options[q.answer[j]]}`)
+      .join("; ");
+
+    showFeedback(
+      document.getElementById(`match-${i}`),
+      correct,
+      answer,
+      q.note
+    );
+  });
+
+  form.querySelectorAll("input, select").forEach(control => {
+    control.disabled = true;
+  });
+
+  document.getElementById("check").hidden = true;
+  document.getElementById("message").textContent = "";
+  document.getElementById("result").textContent =
+    `Ваш результат: ${score} із ${total} балів.`;
+
+  document.getElementById("result").scrollIntoView({
+    behavior: "smooth",
+    block: "center"
+  });
+});
+
+document.getElementById("restart").addEventListener("click", () => {
+  submitted = false;
+  document.getElementById("check").hidden = false;
+  document.getElementById("result").textContent = "";
+  document.getElementById("message").textContent = "";
+  buildQuiz();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+
+buildQuiz();
+</script>
+</body>
+</html>
